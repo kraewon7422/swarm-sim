@@ -40,7 +40,7 @@ $$
 F_{\text{con}}(d) =
 \begin{cases}
 0, & d \le \beta R \\
-k\left(e^{\alpha\,(d/R \,-\, \beta)} - 1\right), & \beta R < d < R
+k\left(e^{\alpha (d/R - \beta)} - 1\right), & \beta R < d < R
 \end{cases}
 $$
 
