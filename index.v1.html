@@ -3,13 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="data:,">
-<title>SPARC Swarm · 군집 로봇 연결성 유지 & 협업 SLAM 시뮬레이터</title>
+<title>SPARC Swarm · 군집 로봇 협업 SLAM 시뮬레이터</title>
 <style>
   :root{
     --bg:#0a0e13; --panel:#10161e; --card:#141c26; --line:#1f2a36;
     --text:#d9e2ec; --muted:#7f8d9c; --accent:#4cc2ff; --ok:#3ddc97;
-    --bad:#ff5d6c; --gold:#ffcc4d; --rv:#d77bff; --warn:#ff9f43;
+    --bad:#ff5d6c; --gold:#ffcc4d; --rv:#d77bff;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   [hidden]{display:none!important}
@@ -26,28 +25,19 @@
   #stage{flex:1;position:relative;min-width:0}
   #world{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
   #legend{position:absolute;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:4px 14px;max-width:calc(100% - 24px);
-    background:rgba(10,14,19,.84);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:11.5px;color:var(--muted);pointer-events:none}
+    background:rgba(10,14,19,.82);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:11.5px;color:var(--muted);pointer-events:none}
   #legend i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px;border-radius:50%}
-  #legend i.ln{height:3px;width:14px;border-radius:0;vertical-align:3px}
-  #hint{position:absolute;right:12px;top:10px;font-size:11.5px;color:var(--muted);background:rgba(10,14,19,.84);
+  #hint{position:absolute;right:12px;top:10px;font-size:11.5px;color:var(--muted);background:rgba(10,14,19,.82);
     border:1px solid var(--line);border-radius:8px;padding:4px 10px;pointer-events:none}
-  #netBadge{position:absolute;left:12px;top:10px;font-size:13px;font-weight:650;background:rgba(10,14,19,.84);
-    border:1px solid var(--line);border-radius:8px;padding:5px 11px;pointer-events:none;font-variant-numeric:tabular-nums}
-  #netBadge.ok{color:var(--ok);border-color:#1f5a45} #netBadge.bad{color:var(--bad);border-color:#6a2a31}
-  #panel{width:360px;flex:none;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:12px 14px 28px}
+  #panel{width:350px;flex:none;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:12px 14px 28px}
   section{margin-bottom:16px}
   h2{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
-  h2 em{font-style:normal;color:var(--warn);text-transform:none;letter-spacing:0}
-  .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  .seg button,.btns button{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:7px;
+  .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .modes button,.btns button{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:7px;
     padding:7px 4px;font:inherit;font-size:12.5px;cursor:pointer}
-  .seg button:hover,.btns button:hover{border-color:#34485c}
-  .seg button.on{background:#123247;border-color:var(--accent);color:#fff}
-  #connSeg button.on{background:#3a2610;border-color:var(--warn)}
-  .desc{margin-top:8px;color:var(--muted);font-size:12.5px}
-  .formula{margin:8px 0;padding:7px 10px;background:#0b1016;border:1px solid var(--line);border-radius:7px;
-    font-family:"Cambria Math","Times New Roman",serif;font-size:14.5px;text-align:center;color:#f3d9b5}
-  .formula sup{font-size:10.5px}
+  .modes button:hover,.btns button:hover{border-color:#34485c}
+  .modes button.on{background:#123247;border-color:var(--accent);color:#fff}
+  #modeDesc{margin-top:8px;color:var(--muted);font-size:12.5px}
   .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
   .ctl{margin-bottom:7px}
   .ctl label{display:flex;justify-content:space-between;font-size:12.5px}
@@ -62,12 +52,7 @@
   .stat .v{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums}
   .stat .l{font-size:11.5px;color:var(--muted)}
   .stat.wide{grid-column:1/-1}
-  .v.ok{color:var(--ok)} .v.bad{color:var(--bad)} .v.acc{color:var(--accent)} .v.warn{color:var(--warn)}
-  .mats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
-  .mats figure{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:5px 6px 4px}
-  .mats canvas{width:100%;aspect-ratio:1;display:block}
-  .mats figcaption{font-size:11px;color:var(--muted);text-align:center;margin-top:2px}
-  #fcurve{width:100%;height:92px;display:block;background:var(--card);border:1px solid var(--line);border-radius:7px;margin-top:4px}
+  .v.ok{color:var(--ok)} .v.bad{color:var(--bad)} .v.acc{color:var(--accent)}
   #chart{width:100%;height:92px;display:block;background:var(--card);border:1px solid var(--line);border-radius:7px;margin-top:6px}
   .keys{display:flex;gap:12px;font-size:11.5px;color:var(--muted);margin-top:4px}
   .keys span::before{content:"";display:inline-block;width:10px;height:3px;background:var(--c);margin-right:5px;vertical-align:3px}
@@ -75,10 +60,10 @@
   #log li{padding:3px 0;border-bottom:1px dashed var(--line);color:var(--muted)}
   #log li.ok{color:#9fe8c8} #log li.bad{color:#ffa3ab}
   #log time{color:#56626f;margin-right:6px;font-variant-numeric:tabular-nums}
-  details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 11px;margin-bottom:8px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 11px}
   summary{cursor:pointer;font-weight:600;font-size:13px}
-  details ol,details ul{margin:8px 0 8px 18px;font-size:12.5px}
-  details li{margin-bottom:4px}
+  details ol{margin:8px 0 8px 18px;font-size:12.5px}
+  details ol li{margin-bottom:4px}
   details p{font-size:12.5px;color:var(--muted);margin:6px 0}
   details b{color:var(--text)}
   pre{background:#0b1016;border:1px solid var(--line);border-radius:6px;padding:8px 9px;font-size:11.5px;line-height:1.45;
@@ -95,23 +80,21 @@
 </head>
 <body>
 <header>
-  <h1><b>SPARC</b> Swarm <small style="color:var(--muted);font-weight:500">v2</small></h1>
-  <span class="sub">군집 로봇 시뮬레이터 · Boids + 연결성 힘(Connectivity Force) 단절 방지 · Swarm-SLAM(MISTLab) 개념 협업 SLAM</span>
+  <h1><b>SPARC</b> Swarm</h1>
+  <span class="sub">군집 로봇 협업 SLAM 시뮬레이터 · Swarm-SLAM(MISTLab) 개념 기반 · 탈중앙 · 희소 통신 · 로봇 간 루프클로저</span>
   <a href="https://github.com/kraewon7422/swarm-sim" target="_blank" rel="noopener">GitHub ↗</a>
 </header>
 <main>
   <div id="stage">
     <canvas id="world"></canvas>
-    <div id="netBadge">네트워크 1개</div>
     <div id="hint">Space 일시정지 · R 리셋 · M 새 맵 · 1/2/3 모드</div>
     <div id="legend">
       <span><i style="background:#8fd3ff"></i>▲ 실제 위치</span>
-      <span><i style="border:1.5px solid #8fd3ff"></i>추정 위치</span>
-      <span><i class="ln" style="background:var(--accent)"></i>통신 링크</span>
-      <span><i class="ln" style="background:var(--warn)"></i>위험 링크 (βR~R)</span>
-      <span>┅ 브리지(끊기면 분할)</span>
-      <span>◇ 절단점</span>
+      <span><i style="border:1.5px solid #8fd3ff"></i>추정 위치(○)</span>
+      <span><i style="background:var(--bad)"></i>위치 오차</span>
+      <span><i style="background:var(--accent)"></i>통신 링크</span>
       <span><i style="border:2px solid var(--gold)"></i>브로커</span>
+      <span><i style="border:2px solid var(--rv)"></i>랑데부 중</span>
       <span><i style="background:var(--ok)"></i>루프클로저</span>
     </div>
   </div>
@@ -119,12 +102,12 @@
   <aside id="panel">
     <section>
       <h2>행동 모드</h2>
-      <div class="seg" id="modeSeg">
-        <button data-m="boids" class="on">① Boids 비행</button>
-        <button data-m="sparc">② 협업 탐사</button>
+      <div class="modes">
+        <button data-m="sparc" class="on">① 협업 SLAM</button>
+        <button data-m="boids">② Boids 비행</button>
         <button data-m="form">③ 대형 유지</button>
       </div>
-      <p class="desc" id="modeDesc"></p>
+      <p id="modeDesc"></p>
     </section>
 
     <section>
@@ -136,40 +119,7 @@
     </section>
 
     <section>
-      <h2>연결성 힘 · Connectivity Force <em>(단절 방지 알고리즘)</em></h2>
-      <div class="seg" id="connSeg">
-        <button data-c="off">끄기</button>
-        <button data-c="all">전체 적용</button>
-        <button data-c="sel" class="on">선택적 부여</button>
-      </div>
-      <p class="desc" id="connDesc"></p>
-      <div class="formula">F<sub>con</sub>(d) = k (e<sup>α(d/R − β)</sup> − 1), &nbsp; βR &lt; d &lt; R <span style="color:var(--muted);font-size:12px">(그 외 0)</span></div>
-      <div class="ctl"><label><span>β (힘 시작 지점 βR)</span><output id="o-beta"></output></label><input type="range" id="c-beta" min="0.5" max="0.95" step="0.05"></div>
-      <div class="ctl"><label><span>k (힘의 크기 배율)</span><output id="o-k"></output></label><input type="range" id="c-k" min="0" max="5" step="0.1"></div>
-      <div class="ctl"><label><span>α (증가 급격도)</span><output id="o-alpha"></output></label><input type="range" id="c-alpha" min="1" max="20" step="1"></div>
-      <canvas id="fcurve"></canvas>
-      <div class="keys"><span style="--c:var(--warn)">F(d) 곡선</span><span style="--c:#fff">현재 힘이 작용 중인 링크</span></div>
-    </section>
-
-    <section>
-      <h2>그래프 지표 · G = (V, E)</h2>
-      <div class="stats">
-        <div class="stat"><div class="v ok" id="gComp">1</div><div class="l">분리된 네트워크 수<br>(L의 고유값 0의 개수)</div></div>
-        <div class="stat"><div class="v acc" id="gLam">0.00</div><div class="l">λ₂ 대수적 연결도<br>(0이면 단절)</div></div>
-        <div class="stat"><div class="v" id="gDeg">0.0</div><div class="l">평균 연결도 2|E|/|V|</div></div>
-        <div class="stat"><div class="v warn" id="gCut">0 / 0</div><div class="l">절단점 / 브리지</div></div>
-        <div class="stat"><div class="v bad" id="gPart">0</div><div class="l">단절(분할) 발생 횟수</div></div>
-        <div class="stat"><div class="v ok" id="gRate">100%</div><div class="l">전체 연결 유지율</div></div>
-        <div class="stat wide"><div class="v" id="gSpread">0.0 m</div><div class="l">군집 반경 (중심까지 평균 거리) — 작을수록 '뭉침'</div></div>
-      </div>
-      <div class="mats">
-        <figure><canvas id="adj"></canvas><figcaption>인접 행렬 A (주황 = 브리지)</figcaption></figure>
-        <figure><canvas id="spec"></canvas><figcaption>L = D − A 고유값</figcaption></figure>
-      </div>
-    </section>
-
-    <section>
-      <h2>협업 SLAM 지표</h2>
+      <h2>실시간 지표</h2>
       <div class="stats">
         <div class="stat"><div class="v acc" id="sCov">0%</div><div class="l">탐사 커버리지</div></div>
         <div class="stat"><div class="v" id="sTime">0 s</div><div class="l">경과 시간</div></div>
@@ -178,8 +128,10 @@
         <div class="stat"><div class="v ok" id="sInter">0</div><div class="l">로봇 간 루프클로저</div></div>
         <div class="stat"><div class="v ok" id="sIntra">0</div><div class="l">자체 루프클로저</div></div>
         <div class="stat"><div class="v bad" id="sRej">0</div><div class="l">기각 (장소 오인식)</div></div>
+        <div class="stat"><div class="v" id="sCand">0</div><div class="l">검증 대기 후보</div></div>
+        <div class="stat"><div class="v" id="sComp">-</div><div class="l">통신 그룹 / 브로커</div></div>
         <div class="stat"><div class="v" id="sState">-</div><div class="l">탐사 / 랑데부</div></div>
-        <div class="stat wide"><div class="v ok" id="sBytes">0 B</div><div class="l" id="sBytesL">누적 통신량</div></div>
+        <div class="stat wide"><div class="v ok" id="sBytes">0 B</div><div class="l" id="sBytesL">누적 통신량 (희소 디스크립터 방식)</div></div>
       </div>
       <canvas id="chart"></canvas>
       <div class="keys"><span style="--c:var(--bad)">평균 오차</span><span style="--c:var(--accent)">평균 σ</span><span style="--c:var(--ok)">커버리지(%)</span></div>
@@ -189,14 +141,14 @@
       <h2>파라미터</h2>
       <div class="ctl"><label><span>로봇 수 <small>(리셋)</small></span><output id="o-n"></output></label><input type="range" id="c-n" min="3" max="40" step="1"></div>
       <div class="ctl"><label><span>통신 반경 R</span><output id="o-comm"></output></label><input type="range" id="c-comm" min="60" max="360" step="5"></div>
-      <div class="ctl"><label><span>최대 속도</span><output id="o-speed"></output></label><input type="range" id="c-speed" min="20" max="160" step="5"></div>
-      <div class="ctl" data-mode="boids form"><label><span>분리 (separation)</span><output id="o-sep"></output></label><input type="range" id="c-sep" min="0" max="3" step="0.1"></div>
-      <div class="ctl" data-mode="boids"><label><span>정렬 (alignment)</span><output id="o-ali"></output></label><input type="range" id="c-ali" min="0" max="3" step="0.1"></div>
-      <div class="ctl" data-mode="boids"><label><span>응집 (cohesion)</span><output id="o-coh"></output></label><input type="range" id="c-coh" min="0" max="3" step="0.1"></div>
       <div class="ctl"><label><span>오도메트리 노이즈</span><output id="o-noise"></output></label><input type="range" id="c-noise" min="0" max="3" step="0.1"></div>
+      <div class="ctl"><label><span>최대 속도</span><output id="o-speed"></output></label><input type="range" id="c-speed" min="20" max="160" step="5"></div>
       <div class="ctl" data-mode="sparc"><label><span>랑데부 임계값 τ</span><output id="o-tau"></output></label><input type="range" id="c-tau" min="0.5" max="8" step="0.5"></div>
       <div class="ctl" data-mode="sparc"><label><span>브로커 검증 예산 K</span><output id="o-budget"></output></label><input type="range" id="c-budget" min="1" max="15" step="1"></div>
-      <div class="ctl" data-mode="sparc"><label><span>장소 오인식률</span><output id="o-alias"></output></label><input type="range" id="c-alias" min="0" max="25" step="1"></div>
+      <div class="ctl"><label><span>장소 오인식률</span><output id="o-alias"></output></label><input type="range" id="c-alias" min="0" max="25" step="1"></div>
+      <div class="ctl"><label><span>분리 (separation)</span><output id="o-sep"></output></label><input type="range" id="c-sep" min="0" max="3" step="0.1"></div>
+      <div class="ctl" data-mode="boids"><label><span>정렬 (alignment)</span><output id="o-ali"></output></label><input type="range" id="c-ali" min="0" max="3" step="0.1"></div>
+      <div class="ctl" data-mode="boids"><label><span>응집 (cohesion)</span><output id="o-coh"></output></label><input type="range" id="c-coh" min="0" max="3" step="0.1"></div>
       <div class="ctl"><label><span>시뮬레이션 속도</span><output id="o-sim"></output></label><input type="range" id="c-sim" min="1" max="6" step="1"></div>
       <div class="toggles">
         <label><input type="checkbox" data-t="links" checked>통신 링크</label>
@@ -215,46 +167,33 @@
 
     <section>
       <details open>
-        <summary>단절 방지 알고리즘 — Connectivity Force</summary>
-        <p><b>아이디어</b>: 연결된 두 로봇의 거리 d가 통신 한계 R에 가까워지면 서로 끌어당기는 힘을 더해 링크가 끊어지지 않게 한다.</p>
-        <p><b>velocity += alignment + cohesion + separation + F<sub>con</sub></b></p>
-        <ul>
-          <li>d ≤ βR (β = 0.8): F = 0 — 평소에는 Boids 그대로</li>
-          <li>βR &lt; d &lt; R: F = k(e<sup>α(d/R−β)</sup> − 1) — d = βR에서 0으로 시작해 R에 가까울수록 지수적으로 커짐 (k = 크기 배율, α = 급격도)</li>
-          <li><b>전체 적용</b>: 연결된 모든 쌍(A[i][j] = 1)에 힘 → 군집 전체가 한 곳에 뭉치는 문제</li>
-          <li><b>선택적 부여</b>: 인접 행렬 A를 '안전 링크(d ≤ βR)'와 '늘어난 링크(βR &lt; d &lt; R)'로 나눔. 늘어난 링크 중 <b>양 끝이 안전 링크만으로는 서로 닿지 않는 링크</b> = 끊기면 네트워크가 쪼개질 수 있는 링크에만 힘을 부여 → 분할은 막고, 우회로가 있는 링크는 자유롭게 늘어나 뭉침을 피함. (<b>브리지</b> — 없어지면 분리된 네트워크 수가 늘어나는 링크 — 는 늘어나는 순간 항상 여기에 포함되고, 브리지만 보면 놓치는 "두 링크가 동시에 끊기는" 경우까지 막음)</li>
-        </ul>
-<pre>A ← adjacency(positions, R)           # 1) 인접행렬 정의
-L ← D − A ;  λ ← eig(L)               # λ=0 개수 = 분리된 네트워크 수
-                                      # λ₂ &gt; 0  ⇔  하나로 연결됨
-A_safe ← { (i,j) : A[i][j]=1, d ≤ βR }
-C ← { (i,j) : A[i][j]=1, d &gt; βR,       # 선택적 부여 대상:
-      i, j not connected in A_safe }  # 끊기면 분할될 수 있는 링크
-for each i, j with A[i][j] = 1:
-    if mode == ALL or (i, j) ∈ C:
-        d ← |x_j − x_i|
-        if βR &lt; d &lt; R:                # 2) 연결성 힘 계산
-            F ← k·(exp(α·(d/R − β)) − 1)
-            v_i += F · (x_j − x_i) / d
-v_i += alignment + cohesion + separation</pre>
-        <p>화면 왼쪽 위 배지와 '그래프 지표'는 매 순간 L = D − A의 고유값을 직접 계산(야코비 방법)해 보여줍니다. 시뮬레이터 단위: F = 1 → 가속도 7.5 m/s².</p>
-        <p>한계와 향후 과제: d ≥ R로 이미 끊긴 뒤에는 F = 0이라 재연결은 다른 행동에 맡겨짐 · 장애물이 사이를 막으면 끌어당겨도 따라가지 못함 → λ₂ 민감도(피들러 벡터) 기반 선택, 이동 지연·장애물 전파 감쇠·방향별 수신율 반영.</p>
-      </details>
-
-      <details>
-        <summary>SPARC 협업 SLAM — Sparse Peer-Assisted Rendezvous &amp; Correction</summary>
-        <p>'② 협업 탐사' 모드에서 각 로봇은 <b>중앙 서버 없이</b> 자기 센서와 통신 반경 안의 이웃 정보만으로 판단합니다. (다른 모드에서도 SLAM은 배경에서 동작)</p>
+        <summary>SPARC 알고리즘 — Sparse Peer-Assisted Rendezvous &amp; Correction</summary>
+        <p>각 로봇은 <b>중앙 서버 없이</b> 자기 센서와 통신 반경 안의 이웃 정보만으로 판단합니다. 매 스텝, 모든 로봇이 병렬·비동기로 아래를 수행합니다.</p>
         <ol>
-          <li><b>오도메트리 적분</b> — x̂ ← x̂ + R(θ̂)·Δ. 자이로 드리프트로 헤딩 오차가 흔들리며 위치가 틀어지고, 분산 σ²는 이동거리에 비례해 커집니다.</li>
+          <li><b>오도메트리 적분</b> — x̂ ← x̂ + R(θ̂)·Δ. 자이로 바이어스로 헤딩 오차가 쌓여 위치가 점점 틀어지고, 불확실성 σ가 이동거리에 비례해 커집니다.</li>
           <li><b>키프레임</b> — 새 장소에 들어가면 {x̂, σ, 장소 디스크립터 d}를 저장합니다.</li>
           <li><b>통신 그래프</b> — 거리 R 이내 로봇끼리만 링크. 연결된 그룹마다 최소 ID 로봇이 <b>브로커</b>가 됩니다.</li>
-          <li><b>희소 교환</b> — 이웃에게 <b>새 디스크립터만</b>(256 B/개) 보냅니다. 전체 지도(키프레임당 ~48 KB) 공유 방식과 통신량을 비교합니다.</li>
+          <li><b>희소 교환</b> — 이웃에게 <b>새 디스크립터만</b>(256 B/개) 보냅니다. 전체 지도(키프레임당 ~48 KB)를 보내는 방식과 통신량을 실시간 비교합니다.</li>
           <li><b>루프클로저 후보</b> — 디스크립터가 일치하면 "같은 장소를 봤다"는 후보가 생깁니다.</li>
-          <li><b>예산 제한 검증</b> — 브로커는 불확실성을 가장 많이 줄일 후보부터 초당 K개만 기하 검증합니다. 닮은 다른 장소(오인식)는 여기서 기각됩니다.</li>
-          <li><b>융합</b> — x* = (x̂a/σa² + x̂b/σb²) / (1/σa² + 1/σb²). 궤적은 마지막 앵커부터 선형 보정. 같은 정보의 이중 계산을 막으려 융합 분산에 하한을 두고, 이미 재측위된 로봇의 옛 키프레임은 고정 기준으로만 씁니다.</li>
-          <li><b>행동 결정</b> — σ &gt; τ 이면 <b>랑데부</b>(가장 확실한 이웃 추종 또는 마지막 만남 장소·기지 복귀), 아니면 <b>프런티어 탐사</b>.</li>
+          <li><b>예산 제한 검증</b> — 브로커는 불확실성 σa²+σb²가 큰 후보부터 초당 K개만 기하 검증합니다. 비슷하게 생긴 다른 장소(오인식)는 여기서 기각됩니다.</li>
+          <li><b>포즈 그래프 융합</b> — x* = (x̂a/σa² + x̂b/σb²) / (1/σa² + 1/σb²). 두 로봇의 궤적을 마지막 앵커부터 선형으로 보정하고 σ를 줄입니다.</li>
+          <li><b>행동 결정</b> — σ &gt; τ 이면 <b>랑데부</b>(가장 확실한 이웃을 따라가거나 마지막 만남 장소·기지로 복귀), 아니면 <b>프런티어 탐사</b>(공유 커버리지에서 미탐사 셀, 이웃 목표와 겹치지 않게).</li>
+          <li><b>조향</b> — 목표 추종 + 분리 + 장애물 회피 (로컬 센싱만 사용).</li>
         </ol>
-        <p>시뮬레이션용 단순화: 2D 평면, 장소 인식은 격자 셀 디스크립터 + 오인식률로 근사, 원 논문의 대수적 연결성 기반 후보 선택·분산 포즈그래프 최적화는 불확실성 감소량 우선순위와 가중평균 융합으로 근사.</p>
+<pre>for each robot i  (parallel, async):
+  x̂ᵢ, σᵢ ← odometry(uᵢ)
+  if entered_new_place(): Kᵢ.add(x̂ᵢ, σᵢ, d)
+  for j in N(i) = { j : |xᵢ − xⱼ| &lt; R }:
+      send(j, Kᵢ.new_descriptors())    # sparse
+      candidates += match(Kᵢ, Kⱼ)
+  if i == min_id(component(i)):        # broker
+      for c in top_K(candidates, σa²+σb²):
+          if verify(c): fuse(c)        # σ ↓
+  goal ← σᵢ &gt; τ ? rendezvous() : frontier()
+  vᵢ ← steer(goal) + separation + avoid</pre>
+        <p><b>Swarm-SLAM에서 가져온 개념</b>: 희소 디스크립터 교환, 로봇 간 루프클로저, 연결 그룹별 브로커, 통신 예산 안에서 후보 우선순위화.<br>
+        <b>새로 추가한 부분</b>: 불확실성 기반 랑데부 행동, 공유 커버리지 기반 프런티어 분산, Boids·대형 제어와의 통합.</p>
+        <p>시뮬레이션용 단순화: 2D 평면, 장소 인식은 격자 셀 디스크립터 + 오인식률로 근사, 원 논문의 대수적 연결성 기반 후보 선택과 분산 포즈그래프 최적화는 σ 우선순위와 가중평균 융합으로 근사했습니다.</p>
         <p class="ref">참고: P.-Y. Lajoie &amp; G. Beltrame, “Swarm-SLAM”, IEEE RA-L 9(1), 2024 ·
           <a href="https://github.com/MISTLab/Swarm-SLAM" target="_blank" rel="noopener">MISTLab/Swarm-SLAM</a> ·
           C. W. Reynolds, “Flocks, Herds, and Schools”, SIGGRAPH 1987</p>
@@ -270,27 +209,16 @@ window.addEventListener('error', e => { document.documentElement.dataset.err = e
 // ---------- constants ----------
 const W = 1200, H = 750, CELL = 30, GX = W / CELL, GY = H / CELL, PX = 20, ROB = 7;  // 20 px = 1 m
 const DESC_B = 256, KF_B = 48 * 1024, COV_B = GX * GY / 8, DT = 1 / 60;
-const CF_UNIT = 7.5 * PX;                                      // connectivity force: F = 1 → 7.5 m/s²
 const $ = id => document.getElementById(id);
-const cv = $('world'), ctx = cv.getContext('2d');
-const ch = $('chart'), cctx = ch.getContext('2d');
-const fc = $('fcurve'), fctx = fc.getContext('2d');
-const adjC = $('adj'), actx = adjC.getContext('2d');
-const specC = $('spec'), sctx = specC.getContext('2d');
+const cv = $('world'), ctx = cv.getContext('2d'), ch = $('chart'), cctx = ch.getContext('2d');
 
-const P = { mode: 'sparc', n: 14, comm: 150, noise: 1, speed: 70, tau: 2.5, budget: 4, alias: 6, sep: 1.2, ali: 1, coh: 0.8, sim: 1,
-            conn: 'sel', beta: 0.8, k: 1, alpha: 10 };
+const P = { mode: 'sparc', n: 12, comm: 170, noise: 1, speed: 70, tau: 2.5, budget: 4, alias: 6, sep: 1.2, ali: 1, coh: 0.8, sim: 1 };
 const S = { links: true, range: false, est: true, truth: false, sigma: true, cov: true };
 
 const MODE_DESC = {
-  boids: 'Reynolds Boids: 통신 반경 R 안의 이웃만 보고 분리·정렬·응집. 여기에 연결성 힘을 더합니다. 클릭하면 무리가 그 지점으로 이동하고, 장애물을 만나면 무리가 갈라지며 링크가 끊어지기 쉽습니다.',
-  sparc: '각 로봇이 미탐사 구역(프런티어)으로 흩어져 탐사합니다. 흩어질수록 네트워크가 끊어지기 쉬운 상황 — 연결성 힘을 끄고/켜서 단절 횟수와 커버리지를 비교해 보세요. 동시에 이웃과 장소 정보를 교환해 위치 오차를 보정합니다(협업 SLAM).',
-  form: '추정 위치 기반 원형 대형. 클릭한 지점을 중심으로 대형을 이룹니다. 로봇 수를 늘리거나 R을 줄이면 대형이 넓어져 링크가 끊어지기 쉽습니다.'
-};
-const CONN_DESC = {
-  off: '연결성 힘 없음 — 기본 Boids/탐사 규칙만. 링크가 R을 넘으면 그대로 끊어집니다.',
-  all: '발표 슬라이드 코드 그대로: 연결된 모든 쌍(A[i][j]=1)에 힘 부여 → 네트워크는 유지되지만 군집 전체가 한 곳에 뭉치는 경향(군집 반경 ↓).',
-  sel: '인접 행렬에서 "끊기면 네트워크가 쪼개질 수 있는 늘어난 링크"(브리지 포함)만 찾아 그 양 끝 로봇에만 힘 부여 → 분할은 막고 뭉침은 피함. 굵은 주황 링크 = 지금 힘이 작용 중.'
+  sparc: '각 로봇이 자기 오도메트리로 지도를 만들고, 통신 반경 안의 동료와만 장소 디스크립터를 교환합니다. 같은 장소가 확인되면 브로커가 위치 오차를 보정하고, σ가 τ를 넘은 로봇은 스스로 동료·기지로 돌아가 랑데부합니다.',
+  boids: 'Reynolds Boids 규칙(분리·정렬·응집)만으로 중앙 제어 없이 무리 비행합니다. 화면을 클릭하면 무리가 그 지점으로 이동합니다. SLAM 보정은 배경에서 계속 동작합니다.',
+  form: '추정 위치 기반 원형 대형입니다. 클릭한 지점을 중심으로 대형을 이룹니다. 노이즈를 올리면 드리프트 때문에 대형이 일그러지는 것을 볼 수 있습니다.'
 };
 
 // ---------- helpers ----------
@@ -303,12 +231,11 @@ function cellC(c) { return { x: (c % GX + .5) * CELL, y: (Math.floor(c / GX) + .
 const errOf = r => Math.hypot(r.ex - r.x, r.ey - r.y);
 const m = px => (px / PX).toFixed(2);
 function fmtB(b) { return b < 1024 ? b.toFixed(0) + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(2) + ' MB' : (b / 1073741824).toFixed(2) + ' GB'; }
-const conF = d => (d > P.beta * P.comm && d < P.comm) ? P.k * (Math.exp(P.alpha * (d / P.comm - P.beta)) - 1) : 0;
 
 // ---------- state ----------
 let seed = 7, obstacles, base, free, freeCount, desc, visited, robots, time, st, cands, candKeys,
-    packets, flashes, logs, hist, target = null, links = [], prevKeys = new Set(), running = true, logDirty = true,
-    commAcc = 0, histAcc = 0, slotAcc = 0, formRot = 0, eig = [], lam2 = 0;
+    packets, flashes, logs, hist, target = null, links = [], running = true, logDirty = true,
+    commAcc = 0, histAcc = 0, slotAcc = 0, formRot = 0;
 
 // ---------- world ----------
 function genWorld() {
@@ -343,12 +270,12 @@ function makeRobot(id) {
   const x = clamp(base.x + Math.cos(a) * rr, ROB + 2, W - ROB), y = base.y + Math.sin(a) * rr * 1.4;
   return {
     id, color: `hsl(${Math.round((id * 137.508) % 360)},80%,64%)`,
-    x, y, ex: x, ey: y, vx: 30 + Math.cos(a) * 15, vy: Math.sin(a) * 15, h: a,
-    sig: 0, he: 0, hm: gauss() * 0.01, sb: gauss() * 0.005,     // uncertainty σ, heading error, heading-bias mean, scale bias
-    trail: [], tBase: 0, anchors: [], lastAnchor: -1, kfs: [], kfBy: new Map(), sn: 0, lastCell: -1, si: 0,
+    x, y, ex: x, ey: y, vx: Math.cos(a) * 25, vy: Math.sin(a) * 25, h: a,
+    sig: 0, he: 0, gb: gauss() * 0.0012, sb: gauss() * 0.01,          // uncertainty, heading error, gyro bias, scale bias
+    trail: [], tBase: 0, anchors: [], kfs: [], kfBy: new Map(), sn: 0, lastCell: -1, si: 0,
     known: new Uint8Array(GX * GY), ban: new Map(), state: 'EXPLORE', tgt: null, tgtT: 0,
     stuckD: 1e9, stuckT: 0, rvT: 0, cool: 0, sent: new Map(), contact: null,
-    nb: [], comp: -1, broker: false, cut: false, cfx: 0, cfy: 0, bacc: 0, lastIntra: -99, slot: id
+    nb: [], comp: -1, broker: false, bacc: 0, lastIntra: -99, slot: id
   };
 }
 
@@ -357,134 +284,24 @@ function reset(newMap) {
   genWorld();
   visited = new Uint8Array(GX * GY);
   time = 0; commAcc = histAcc = slotAcc = 0;
-  st = { inter: 0, intra: 0, rej: 0, bytes: 0, dense: 0, comps: 1, brokers: 0, vis: 0, partitions: 0, connT: 0, lastComps: 1 };
-  cands = []; candKeys = new Set(); packets = []; flashes = []; logs = []; hist = []; links = []; prevKeys = new Set();
+  st = { inter: 0, intra: 0, rej: 0, bytes: 0, dense: 0, comps: 0, brokers: 0, vis: 0 };
+  cands = []; candKeys = new Set(); packets = []; flashes = []; logs = []; hist = []; links = [];
   robots = [];
   for (let i = 0; i < P.n; i++) robots.push(makeRobot(i));
   assignSlots();
-  computeGraph();                                              // initial graph is not a "partition event"
-  st.partitions = 0; st.lastComps = st.comps; logs.length = 0; flashes.length = 0;
   log(`시작 — 로봇 ${P.n}대가 기지(BASE)에서 출발`);
 }
 
 function log(msg, cls = '') { logs.unshift({ t: time, msg, cls }); if (logs.length > 40) logs.pop(); logDirty = true; }
 
-// ---------- communication graph: adjacency, components, bridges / cut vertices ----------
-function computeGraph() {
-  links.length = 0;
-  for (const r of robots) { r.nb.length = 0; r.comp = -1; r.broker = false; r.cut = false; }
-  const R2 = P.comm * P.comm, n = robots.length;
-  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-    const a = robots[i], b = robots[j], dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
-    if (d2 < R2) { a.nb.push(b); b.nb.push(a); links.push({ a, b, d: Math.sqrt(d2), bridge: false, f: 0 }); }
-  }
-  // connected components; robots are scanned in id order, so the first robot of each component has the minimum id → broker
-  let comp = 0, brokers = 0;
-  for (const r of robots) {
-    if (r.comp >= 0) continue;
-    const q = [r]; r.comp = comp;
-    for (let k = 0; k < q.length; k++) for (const s of q[k].nb) if (s.comp < 0) { s.comp = comp; q.push(s); }
-    if (q.length > 1) { r.broker = true; brokers++; }
-    comp++;
-  }
-  st.comps = comp; st.brokers = brokers;
-  findBridges();
-
-  // partition events: the number of networks went up since the last step
-  const keys = new Set();
-  for (const L of links) keys.add(L.a.id * 64 + L.b.id);
-  if (comp > st.lastComps) {
-    st.partitions++;
-    for (const k of prevKeys) if (!keys.has(k)) {
-      const a = robots[Math.floor(k / 64)], b = robots[k % 64];
-      if (a && b && a.comp !== b.comp) flashes.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y, ok: false, cut: true, t: 0 });
-    }
-    log(`⚠ 네트워크 분할: ${st.lastComps}개 → ${comp}개`, 'bad');
-  } else if (comp < st.lastComps && P.conn !== 'off') {
-    log(`네트워크 재연결: ${st.lastComps}개 → ${comp}개`, 'ok');
-  }
-  st.lastComps = comp; prevKeys = keys;
-}
-
-// Tarjan DFS: a link is a bridge if removing it increases the number of networks; its endpoints are cut-vertex candidates
-function findBridges() {
-  const n = robots.length, disc = new Int32Array(n).fill(-1), low = new Int32Array(n), bset = new Set();
-  let t = 0;
-  const dfs = (u, parent) => {
-    disc[u] = low[u] = t++;
-    let child = 0;
-    for (const vr of robots[u].nb) {
-      const v = vr.id;
-      if (disc[v] < 0) {
-        child++;
-        dfs(v, u);
-        low[u] = Math.min(low[u], low[v]);
-        if (low[v] > disc[u]) bset.add(Math.min(u, v) * 64 + Math.max(u, v));
-        if (parent >= 0 && low[v] >= disc[u]) robots[u].cut = true;
-      } else if (v !== parent) low[u] = Math.min(low[u], disc[v]);
-    }
-    if (parent < 0 && child > 1) robots[u].cut = true;
-  };
-  for (let u = 0; u < n; u++) if (disc[u] < 0) dfs(u, -1);
-  for (const L of links) L.bridge = bset.has(L.a.id * 64 + L.b.id);
-}
-
-// Connectivity Force (forum deck, section 05): F = k(e^{α(d/R−β)} − 1) for βR < d < R, pulling i toward j
-// selective: a stretched link (d > βR) is critical if its two ends are NOT connected through un-stretched links (d ≤ βR);
-// every stretched bridge is critical, and so are parallel stretched links that could all snap together
-function connForces() {
-  for (const r of robots) { r.cfx = 0; r.cfy = 0; }
-  const s0 = P.beta * P.comm, uf = robots.map((_, i) => i);
-  const find = i => { while (uf[i] !== i) i = uf[i] = uf[uf[i]]; return i; };
-  if (P.conn === 'sel') for (const L of links) if (L.d <= s0) uf[find(L.a.id)] = find(L.b.id);
-  for (const L of links) {
-    L.f = 0;
-    L.crit = L.d > s0 && find(L.a.id) !== find(L.b.id);
-    if (P.conn === 'off' || (P.conn === 'sel' && !L.crit)) continue;
-    const F = conF(L.d);
-    if (F <= 0) continue;
-    L.f = F;
-    const ux = (L.b.x - L.a.x) / L.d, uy = (L.b.y - L.a.y) / L.d, g = F * CF_UNIT;
-    L.a.cfx += ux * g; L.a.cfy += uy * g;
-    L.b.cfx -= ux * g; L.b.cfy -= uy * g;
-  }
-}
-
-// eigenvalues of the graph Laplacian L = D − A (cyclic Jacobi, n ≤ 40)
-function laplacianEig() {
-  const n = robots.length, a = [];
-  for (let i = 0; i < n; i++) a.push(new Float64Array(n));
-  for (const L of links) { a[L.a.id][L.b.id] = -1; a[L.b.id][L.a.id] = -1; }
-  for (const r of robots) a[r.id][r.id] = r.nb.length;
-  for (let sweep = 0; sweep < 60; sweep++) {
-    let off = 0;
-    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) off += a[p][q] * a[p][q];
-    if (off < 1e-18) break;
-    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) {
-      const apq = a[p][q];
-      if (Math.abs(apq) < 1e-15) continue;
-      const th = (a[q][q] - a[p][p]) / (2 * apq);
-      const t = (th >= 0 ? 1 : -1) / (Math.abs(th) + Math.sqrt(th * th + 1));
-      const c = 1 / Math.sqrt(t * t + 1), s = t * c;
-      for (let k = 0; k < n; k++) { const kp = a[k][p], kq = a[k][q]; a[k][p] = c * kp - s * kq; a[k][q] = s * kp + c * kq; }
-      for (let k = 0; k < n; k++) { const pk = a[p][k], qk = a[q][k]; a[p][k] = c * pk - s * qk; a[q][k] = s * pk + c * qk; }
-    }
-  }
-  eig = [];
-  for (let i = 0; i < n; i++) eig.push(Math.abs(a[i][i]) < 1e-7 ? 0 : a[i][i]);
-  eig.sort((x, y) => x - y);
-  lam2 = n > 1 ? eig[1] : 0;
-}
-
 // ---------- SLAM: odometry, keyframes, loop closures ----------
 function odom(r, dx, dy, dt) {
-  const nz = P.noise, TH = 10, SH = 0.035 * nz;              // heading error: Ornstein-Uhlenbeck gyro drift (corr. time TH, std SH)
-  r.he += -(r.he - r.hm * nz) / TH * dt + SH * Math.sqrt(2 * dt / TH) * gauss();
-  const c = Math.cos(r.he), s = Math.sin(r.he), k = 1 + r.sb * nz, d = Math.hypot(dx, dy);
-  r.ex += (dx * c - dy * s) * k;
-  r.ey += (dx * s + dy * c) * k;
-  // position variance from that heading process grows ≈ 2·v·SH²·TH per unit distance
-  r.sig = Math.sqrt(r.sig * r.sig + 2 * (d / dt) * SH * SH * TH * d);
+  const nz = P.noise;
+  r.he = clamp(r.he + r.gb * nz * dt + gauss() * 0.004 * nz * Math.sqrt(dt), -0.35, 0.35);
+  const c = Math.cos(r.he), s = Math.sin(r.he), k = 1 + r.sb * nz, d = Math.hypot(dx, dy), jit = 0.03 * nz * Math.sqrt(d);
+  r.ex += (dx * c - dy * s) * k + gauss() * jit;
+  r.ey += (dx * s + dy * c) * k + gauss() * jit;
+  r.sig += 0.02 * nz * d;
 }
 
 function pushTrail(r) {
@@ -501,11 +318,6 @@ function sense(r) {
   if (tc >= 0 && tc !== r.lastCell) { r.lastCell = tc; addKF(r, tc); }
 }
 
-// fused variance, floored so repeated closures can't double-count shared information
-const fuseVar = (va, vb) => Math.max(1 / (1 / va + 1 / vb), 0.6 * Math.min(va, vb), 1);
-// expected variance reduction of the less certain side
-function gainOf(ka, kb) { const va = ka.s * ka.s + 1, vb = kb.s * kb.s + 1, hi = Math.max(va, vb), lo = Math.min(va, vb); return hi * hi / (hi + lo); }
-
 function addKF(r, tc) {
   pushTrail(r);
   const kf = { sn: r.sn++, c: tc, d: desc[tc], ex: r.ex, ey: r.ey, s: r.sig, idx: r.tBase + r.trail.length - 1, t: time };
@@ -518,14 +330,14 @@ function addKF(r, tc) {
     a.shift(); if (!a.length) r.kfBy.delete(old.d);
   }
   // intra-robot loop closure: I recognise a place I visited earlier with lower uncertainty
-  if (time - r.lastIntra > 3 && r.sig > 10) {
+  if (time - r.lastIntra > 3 && r.sig > 5) {
     let best = null;
     for (const k of arr) if (k !== kf && time - k.t > 8 && (!best || k.s < best.s)) best = k;
     if (best && best.s < r.sig * 0.7) {
       r.lastIntra = time;
       if (best.c !== kf.c) { st.rej++; flashes.push({ x1: best.ex, y1: best.ey, x2: kf.ex, y2: kf.ey, ok: false, t: 0 }); return; }
-      const e0 = errOf(r), vo = best.s * best.s + 1, vn = kf.s * kf.s + 1, fv = fuseVar(vo, vn), w = 1 / (1 / vo + 1 / vn);
-      const fx = (best.ex / vo + kf.ex / vn) * w, fy = (best.ey / vo + kf.ey / vn) * w;
+      const e0 = errOf(r), vo = best.s * best.s + 1, vn = kf.s * kf.s + 1, fv = 1 / (1 / vo + 1 / vn);
+      const fx = (best.ex / vo + kf.ex / vn) * fv, fy = (best.ey / vo + kf.ey / vn) * fv;
       flashes.push({ x1: best.ex, y1: best.ey, x2: kf.ex, y2: kf.ey, fx, fy, ok: true, t: 0 });
       applyFix(r, kf, fx - kf.ex, fy - kf.ey, vn, fv);
       st.intra++;
@@ -544,27 +356,47 @@ function correct(r, idx, dx, dy) {
   for (const k of r.kfs) { const t = f(k.idx); if (t) { k.ex += dx * t; k.ey += dy * t; } }
   r.ex += dx; r.ey += dy;
   r.anchors.push(idx); if (r.anchors.length > 60) r.anchors.shift();
-  r.lastAnchor = Math.max(r.lastAnchor, idx);
 }
 
 function applyFix(r, k, dx, dy, v0, fv) {
-  const red = Math.max(0, v0 - fv);
+  const red = Math.max(0, v0 - fv), w = red / v0;
   correct(r, k.idx, dx, dy);
-  const shrink = s => { const v = s * s; return Math.sqrt(Math.max(v - red, Math.min(v, fv), 1)); };
-  for (const q of r.kfs) if (q.idx > k.idx) q.s = shrink(q.s);
+  r.he *= (1 - 0.8 * w);
+  const shrink = s => Math.sqrt(Math.max(s * s - red, s * s * 0.1, 1));
+  for (const q of r.kfs) if (q.idx >= k.idx) q.s = shrink(q.s);
   r.sig = shrink(r.sig);
   k.s = Math.sqrt(fv);
 }
 
-// ---------- SLAM communication ----------
+// ---------- communication ----------
+function computeGraph() {
+  links.length = 0;
+  for (const r of robots) { r.nb.length = 0; r.comp = -1; r.broker = false; }
+  const R2 = P.comm * P.comm, n = robots.length;
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+    const a = robots[i], b = robots[j], dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
+    if (d2 < R2) { a.nb.push(b); b.nb.push(a); links.push([a, b, Math.sqrt(d2)]); }
+  }
+  // connected components; robots are scanned in id order, so the first robot of each component has the minimum id → broker
+  let comp = 0, brokers = 0;
+  for (const r of robots) {
+    if (r.comp >= 0) continue;
+    const q = [r]; r.comp = comp;
+    for (let k = 0; k < q.length; k++) for (const s of q[k].nb) if (s.comp < 0) { s.comp = comp; q.push(s); }
+    if (q.length > 1) { r.broker = true; brokers++; }
+    comp++;
+  }
+  st.comps = comp; st.brokers = brokers;
+}
+
 function addCand(A, ka, B, kb) {
-  if (gainOf(ka, kb) < 100) return;                            // < (0.5 m)² expected gain: not worth bandwidth
+  if (ka.s * ka.s + kb.s * kb.s < 16) return;                 // both already well localised → no information gain
   const [x, kx, y, ky] = A.id < B.id ? [A, ka, B, kb] : [B, kb, A, ka];
   const key = x.id + '.' + kx.sn + '|' + y.id + '.' + ky.sn;
   if (candKeys.has(key)) return;
   candKeys.add(key);
   cands.push({ a: x.id, ka: kx, b: y.id, kb: ky });
-  if (cands.length > 500) { cands.sort((p, q) => gainOf(q.ka, q.kb) - gainOf(p.ka, p.kb)); cands.length = 400; }
+  if (cands.length > 500) { cands.sort((p, q) => (q.ka.s ** 2 + q.kb.s ** 2) - (p.ka.s ** 2 + p.kb.s ** 2)); cands.length = 400; }
 }
 
 // A sends only descriptors B has not seen yet; B matches them against its own keyframes
@@ -585,8 +417,7 @@ function exchange(A, B) {
 }
 
 function commTick() {
-  for (const L of links) {
-    const a = L.a, b = L.b;
+  for (const [a, b] of links) {
     exchange(a, b); exchange(b, a);
     const ka = a.known, kb = b.known;
     for (let c = 0; c < ka.length; c++) { const v = ka[c] | kb[c]; ka[c] = v; kb[c] = v; }
@@ -595,7 +426,7 @@ function commTick() {
   }
 }
 
-// each broker verifies at most K candidates per second, largest expected uncertainty reduction first
+// each broker verifies at most K candidates per second, highest uncertainty first
 function brokerStep(dt) {
   for (const r of robots) {
     if (!r.broker) { r.bacc = 0; continue; }
@@ -605,20 +436,19 @@ function brokerStep(dt) {
       for (let i = 0; i < cands.length; i++) {
         const c = cands[i], A = robots[c.a], B = robots[c.b];
         if (A.comp !== r.comp || B.comp !== r.comp) continue;
-        const p = gainOf(c.ka, c.kb);
+        const p = c.ka.s * c.ka.s + c.kb.s * c.kb.s;
         if (p > bp) { bp = p; bi = i; }
       }
       if (bi < 0) break;
       const c = cands.splice(bi, 1)[0];
-      const staleA = c.ka.idx < robots[c.a].lastAnchor, staleB = c.kb.idx < robots[c.b].lastAnchor;
-      if (bp < 100 || (staleA && staleB)) continue;           // nothing to gain any more: drop without spending budget
+      if (bp < 16) continue;                                   // became well-constrained meanwhile: drop for free
       r.bacc -= 1;
-      verify(c, r, staleA, staleB);
+      verify(c, r);
     }
   }
 }
 
-function verify(c, br, staleA, staleB) {
+function verify(c, br) {
   const A = robots[c.a], B = robots[c.b], ka = c.ka, kb = c.kb;
   st.bytes += 2 * KF_B / 4;                                    // only the selected pair ships compact local features
   if (packets.length < 160) { if (A !== br) packets.push({ a: A, b: br, t: 0, c: '#ffcc4d' }); if (B !== br) packets.push({ a: B, b: br, t: 0, c: '#ffcc4d' }); }
@@ -629,12 +459,12 @@ function verify(c, br, staleA, staleB) {
     return;
   }
   const e0 = (errOf(A) + errOf(B)) / 2;
-  const va = ka.s * ka.s + 1, vb = kb.s * kb.s + 1, w = 1 / (1 / va + 1 / vb), fv = fuseVar(va, vb);
-  const fx = (ka.ex / va + kb.ex / vb) * w, fy = (ka.ey / va + kb.ey / vb) * w;
+  const va = ka.s * ka.s + 1, vb = kb.s * kb.s + 1, fv = 1 / (1 / va + 1 / vb);
+  const fx = (ka.ex / va + kb.ex / vb) * fv, fy = (ka.ey / va + kb.ey / vb) * fv;
   flashes.push({ x1: ka.ex, y1: ka.ey, x2: kb.ex, y2: kb.ey, fx, fy, ok: true, t: 0 });
-  // a robot re-localised after this keyframe keeps it as a fixed reference instead of being moved
-  if (!staleA) applyFix(A, ka, fx - ka.ex, fy - ka.ey, va, fv);
-  if (!staleB) applyFix(B, kb, fx - kb.ex, fy - kb.ey, vb, fv);
+  const dax = fx - ka.ex, day = fy - ka.ey, dbx = fx - kb.ex, dby = fy - kb.ey;
+  applyFix(A, ka, dax, day, va, fv);
+  applyFix(B, kb, dbx, dby, vb, fv);
   st.inter++;
   log(`R${A.id}↔R${B.id} 로봇 간 루프클로저 ✓ (브로커 R${br.id}) 오차 ${m(e0)}→${m((errOf(A) + errOf(B)) / 2)} m`, 'ok');
 }
@@ -722,15 +552,14 @@ function sparcSteer(r, dt) {
     r.stuckD = d; r.stuckT = 0;
   }
   const [dvx, dvy] = setMag(tx - r.ex, ty - r.ey, P.speed);
-  const s = separation(r, 30, 500);
+  const s = separation(r, 30, P.sep * 420);
   return [(dvx - r.vx) * 2.5 + s[0], (dvy - r.vy) * 2.5 + s[1]];
 }
 
-// Boids: only neighbours inside the communication radius R are visible
 function boidsSteer(r) {
-  const mx = P.speed;
+  const vr = Math.min(P.comm, 120), mx = P.speed;
   let n = 0, cx = 0, cy = 0, avx = 0, avy = 0, ax = 0, ay = 0;
-  for (const q of r.nb) { n++; cx += q.x; cy += q.y; avx += q.vx; avy += q.vy; }
+  for (const q of r.nb) { if (Math.hypot(q.x - r.x, q.y - r.y) > vr) continue; n++; cx += q.x; cy += q.y; avx += q.vx; avy += q.vy; }
   if (n) {
     const [a1, a2] = setMag(avx / n, avy / n, mx); ax += (a1 - r.vx) * 1.5 * P.ali; ay += (a2 - r.vy) * 1.5 * P.ali;
     const [c1, c2] = setMag(cx / n - r.x, cy / n - r.y, mx); ax += (c1 - r.vx) * 0.9 * P.coh; ay += (c2 - r.vy) * 0.9 * P.coh;
@@ -766,11 +595,8 @@ function formSteer(r) {
 
 // ---------- physics ----------
 function move(r, ax, ay, dt) {
-  let am = Math.hypot(ax, ay);
-  if (am > 340) { ax = ax / am * 340; ay = ay / am * 340; }
-  ax += r.cfx; ay += r.cfy;                                    // connectivity force is added on top of the behaviour
-  am = Math.hypot(ax, ay);
-  if (am > 900) { ax = ax / am * 900; ay = ay / am * 900; }
+  const am = Math.hypot(ax, ay), maxA = 340;
+  if (am > maxA) { ax = ax / am * maxA; ay = ay / am * maxA; }
   r.vx += ax * dt; r.vy += ay * dt;
   const sp = Math.hypot(r.vx, r.vy);
   if (sp > P.speed) { r.vx *= P.speed / sp; r.vy *= P.speed / sp; }
@@ -795,8 +621,6 @@ function move(r, ax, ay, dt) {
 function step(dt) {
   time += dt;
   computeGraph();
-  connForces();
-  if (st.comps === 1) st.connT += dt;
   if (P.mode === 'form') { formRot += dt * 0.12; slotAcc += dt; if (slotAcc > 1) { slotAcc = 0; assignSlots(); } }
   for (const r of robots) {
     const a = P.mode === 'sparc' ? sparcSteer(r, dt) : P.mode === 'boids' ? boidsSteer(r) : formSteer(r);
@@ -821,12 +645,11 @@ function step(dt) {
 
 // ---------- rendering ----------
 let scale = 1, ox = 0, oy = 0, dpr = 1;
-function fitCanvas(c) { const rc = c.getBoundingClientRect(); c.width = Math.max(1, Math.round(rc.width * dpr)); c.height = Math.max(1, Math.round(rc.height * dpr)); return rc; }
 function resize() {
-  dpr = window.devicePixelRatio || 1;
-  const rc = fitCanvas(cv);
+  const rc = cv.getBoundingClientRect(); dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(1, Math.round(rc.width * dpr)); cv.height = Math.max(1, Math.round(rc.height * dpr));
   scale = Math.min(rc.width / W, rc.height / H); ox = (rc.width - W * scale) / 2; oy = (rc.height - H * scale) / 2;
-  fitCanvas(ch); fitCanvas(fc); fitCanvas(adjC); fitCanvas(specC);
+  const cr = ch.getBoundingClientRect(); ch.width = Math.max(1, Math.round(cr.width * dpr)); ch.height = Math.max(1, Math.round(cr.height * dpr));
 }
 
 function draw() {
@@ -862,15 +685,10 @@ function draw() {
   }
 
   if (S.links) {
-    const s0 = P.beta * P.comm;
-    for (const L of links) {
-      const danger = L.d > s0;
-      ctx.strokeStyle = danger ? `rgba(255,159,67,${(0.55 + 0.45 * (L.d - s0) / (P.comm - s0)).toFixed(3)})`
-                               : `rgba(76,194,255,${(0.15 + 0.45 * (1 - L.d / P.comm)).toFixed(3)})`;
-      ctx.lineWidth = ((L.bridge ? 2 : 1.2) + Math.min(4, L.f * 0.7)) * lw;
-      if (L.bridge) ctx.setLineDash([7 * lw, 4 * lw]);
-      ctx.beginPath(); ctx.moveTo(L.a.x, L.a.y); ctx.lineTo(L.b.x, L.b.y); ctx.stroke();
-      if (L.bridge) ctx.setLineDash([]);
+    ctx.lineWidth = 1.2 * lw;
+    for (const [a, b, d] of links) {
+      ctx.strokeStyle = `rgba(76,194,255,${(0.12 + 0.5 * (1 - d / P.comm)).toFixed(3)})`;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
     }
   }
 
@@ -884,7 +702,7 @@ function draw() {
     }
   }
   if (S.est) {
-    ctx.lineWidth = 1.3 * lw; ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 1.3 * lw; ctx.globalAlpha = 0.5;
     for (const r of robots) {
       if (r.trail.length < 2) continue;
       ctx.strokeStyle = r.color; ctx.beginPath(); ctx.moveTo(r.trail[0].ex, r.trail[0].ey);
@@ -900,7 +718,7 @@ function draw() {
       if (r.sig < 2) continue;
       ctx.beginPath(); ctx.arc(r.ex, r.ey, r.sig, 0, Math.PI * 2);
       ctx.fillStyle = r.color; ctx.globalAlpha = 0.05; ctx.fill();
-      ctx.strokeStyle = r.color; ctx.globalAlpha = 0.28; ctx.stroke();
+      ctx.strokeStyle = r.color; ctx.globalAlpha = 0.3; ctx.stroke();
     }
     ctx.globalAlpha = 1;
   }
@@ -926,11 +744,10 @@ function draw() {
       ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke();
       ctx.beginPath(); ctx.arc(f.fx, f.fy, 6 + f.t * 34, 0, Math.PI * 2); ctx.stroke();
     } else {
-      ctx.strokeStyle = '#ff5d6c'; ctx.lineWidth = (f.cut ? 3 : 1.6) * lw; ctx.setLineDash([4 * lw, 4 * lw]);
+      ctx.strokeStyle = '#ff5d6c'; ctx.lineWidth = 1.6 * lw; ctx.setLineDash([4 * lw, 4 * lw]);
       ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.setLineDash([]);
-      const mx = (f.x1 + f.x2) / 2, my = (f.y1 + f.y2) / 2, k = (f.cut ? 10 : 6) * rs;
+      const mx = (f.x1 + f.x2) / 2, my = (f.y1 + f.y2) / 2, k = 6 * rs;
       ctx.beginPath(); ctx.moveTo(mx - k, my - k); ctx.lineTo(mx + k, my + k); ctx.moveTo(mx + k, my - k); ctx.lineTo(mx - k, my + k); ctx.stroke();
-      if (f.cut) { ctx.fillStyle = '#ff5d6c'; ctx.font = `700 ${12 * lw}px system-ui,sans-serif`; ctx.fillText('단절!', mx, my - k - 4 * lw); }
     }
   }
   ctx.globalAlpha = 1;
@@ -939,19 +756,15 @@ function draw() {
   ctx.textAlign = 'center'; ctx.font = `600 ${10 * lw}px system-ui,sans-serif`;
   for (const r of robots) {
     if (r.broker) { ctx.strokeStyle = '#ffcc4d'; ctx.lineWidth = 2 * lw; ctx.beginPath(); ctx.arc(r.x, r.y, 13 * rs, 0, Math.PI * 2); ctx.stroke(); }
-    if (r.cut) {
-      const k = 17 * rs; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.6 * lw;
-      ctx.beginPath(); ctx.moveTo(r.x, r.y - k); ctx.lineTo(r.x + k, r.y); ctx.lineTo(r.x, r.y + k); ctx.lineTo(r.x - k, r.y); ctx.closePath(); ctx.stroke();
-    }
     if (P.mode === 'sparc' && r.state === 'RENDEZVOUS') {
       ctx.strokeStyle = `rgba(215,123,255,${(0.35 + 0.6 * pulse).toFixed(3)})`; ctx.lineWidth = 1.6 * lw;
-      ctx.beginPath(); ctx.arc(r.x, r.y, (21 + 3 * pulse) * rs, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(r.x, r.y, (17 + 3 * pulse) * rs, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.h); ctx.scale(rs, rs);
     ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-6, 6); ctx.lineTo(-3, 0); ctx.lineTo(-6, -6); ctx.closePath();
     ctx.fillStyle = r.color; ctx.fill(); ctx.strokeStyle = '#05080b'; ctx.lineWidth = 1.2 * lw / rs; ctx.stroke();
     ctx.restore();
-    if (robots.length <= 20) { ctx.fillStyle = 'rgba(217,226,236,.75)'; ctx.fillText('R' + r.id, r.x, r.y - 20 * rs); }
+    if (robots.length <= 20) { ctx.fillStyle = 'rgba(217,226,236,.75)'; ctx.fillText('R' + r.id, r.x, r.y - 14 * rs); }
   }
 
   if (target && P.mode !== 'sparc') {
@@ -981,70 +794,10 @@ function drawChart() {
   cctx.fillText(mx.toFixed(1) + ' m', pad + 2 * dpr, pad + 9 * dpr);
 }
 
-// F(d) curve like the deck's graph, with the links currently under force plotted on it
-function drawFCurve() {
-  const w = fc.width, h = fc.height, pl = 8 * dpr, pr = 8 * dpr, pt = 8 * dpr, pb = 16 * dpr;
-  fctx.setTransform(1, 0, 0, 1, 0, 0); fctx.clearRect(0, 0, w, h);
-  const R = P.comm, fmax = Math.max(0.5, P.k * (Math.exp(P.alpha * (1 - P.beta)) - 1));
-  const X = d => pl + (w - pl - pr) * d / R, Y = f => h - pb - (h - pt - pb) * Math.min(f, fmax) / fmax;
-  fctx.strokeStyle = '#2a3847'; fctx.lineWidth = dpr; fctx.beginPath();
-  fctx.moveTo(pl, h - pb); fctx.lineTo(w - pr, h - pb); fctx.moveTo(X(P.beta * R), pt); fctx.lineTo(X(P.beta * R), h - pb); fctx.stroke();
-  fctx.strokeStyle = '#ff9f43'; fctx.lineWidth = 2 * dpr; fctx.beginPath();
-  for (let i = 0; i <= 120; i++) { const d = R * i / 120 * 0.999, f = d > P.beta * R ? P.k * (Math.exp(P.alpha * (d / R - P.beta)) - 1) : 0; i ? fctx.lineTo(X(d), Y(f)) : fctx.moveTo(X(d), Y(f)); }
-  fctx.stroke();
-  fctx.fillStyle = '#ffffff';
-  for (const L of links) if (L.f > 0) { fctx.beginPath(); fctx.arc(X(L.d), Y(L.f), 2.6 * dpr, 0, Math.PI * 2); fctx.fill(); }
-  fctx.fillStyle = '#7f8d9c'; fctx.font = `${10 * dpr}px system-ui,sans-serif`; fctx.textAlign = 'center';
-  fctx.fillText('βR', X(P.beta * R), h - 4 * dpr); fctx.fillText('R', X(R) - 4 * dpr, h - 4 * dpr); fctx.fillText('0', X(0) + 4 * dpr, h - 4 * dpr);
-  fctx.textAlign = 'left'; fctx.fillText('F=' + fmax.toFixed(1), pl + 2 * dpr, pt + 8 * dpr);
-}
-
-function drawMatrices() {
-  const n = robots.length;
-  { // adjacency matrix
-    const w = adjC.width, cs = w / n;
-    actx.setTransform(1, 0, 0, 1, 0, 0); actx.fillStyle = '#0b1016'; actx.fillRect(0, 0, w, w);
-    for (const L of links) {
-      actx.fillStyle = L.bridge ? '#ff9f43' : '#2f8fc0';
-      actx.fillRect(L.a.id * cs, L.b.id * cs, cs - 0.5, cs - 0.5); actx.fillRect(L.b.id * cs, L.a.id * cs, cs - 0.5, cs - 0.5);
-    }
-    for (const r of robots) { actx.fillStyle = r.cut ? '#ffffff' : '#34404d'; actx.fillRect(r.id * cs, r.id * cs, cs - 0.5, cs - 0.5); }
-  }
-  { // Laplacian spectrum
-    const w = specC.width, h = specC.height, pad = 4 * dpr, bw = (w - 2 * pad) / Math.max(1, eig.length);
-    sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.fillStyle = '#0b1016'; sctx.fillRect(0, 0, w, h);
-    const mx = Math.max(1, eig[eig.length - 1] || 1), base = h - 16 * dpr;
-    eig.forEach((v, i) => {
-      if (v === 0) { sctx.fillStyle = '#ff5d6c'; sctx.beginPath(); sctx.arc(pad + bw * (i + .5), base - 3 * dpr, Math.min(3 * dpr, bw * .45), 0, Math.PI * 2); sctx.fill(); }
-      else { sctx.fillStyle = i === 1 ? '#4cc2ff' : '#3a5670'; const bh = (base - pad) * v / mx; sctx.fillRect(pad + bw * i + bw * .12, base - bh, bw * .76, bh); }
-    });
-    const zeros = eig.filter(v => v === 0).length;
-    sctx.fillStyle = zeros > 1 ? '#ff5d6c' : '#3ddc97'; sctx.font = `600 ${10.5 * dpr}px system-ui,sans-serif`; sctx.textAlign = 'left';
-    sctx.fillText(`λ=0 × ${zeros}`, pad, h - 4 * dpr);
-    sctx.fillStyle = '#4cc2ff'; sctx.textAlign = 'right'; sctx.fillText(`λ₂=${lam2.toFixed(2)}`, w - pad, h - 4 * dpr);
-  }
-}
-
 function updateUI() {
-  laplacianEig();
-  const n = robots.length, zeros = eig.filter(v => v === 0).length;
-  let e = 0, s = 0, rv = 0, cx = 0, cy = 0;
-  for (const r of robots) { e += errOf(r); s += r.sig; if (r.state === 'RENDEZVOUS') rv++; cx += r.x; cy += r.y; }
-  cx /= n; cy /= n;
-  let spread = 0; for (const r of robots) spread += Math.hypot(r.x - cx, r.y - cy); spread /= n;
-  const cuts = robots.filter(r => r.cut).length, bridges = links.filter(L => L.bridge).length;
-
-  $('gComp').textContent = zeros; $('gComp').className = 'v ' + (zeros > 1 ? 'bad' : 'ok');
-  $('gLam').textContent = lam2.toFixed(2);
-  $('gDeg').textContent = (2 * links.length / n).toFixed(1);
-  $('gCut').textContent = cuts + ' / ' + bridges;
-  $('gPart').textContent = st.partitions;
-  $('gRate').textContent = (time > 0 ? 100 * st.connT / time : 100).toFixed(0) + '%';
-  $('gSpread').textContent = m(spread) + ' m';
-  const badge = $('netBadge');
-  badge.textContent = zeros > 1 ? `⚠ 네트워크 ${zeros}개로 분할 · λ₂ = 0` : `✓ 네트워크 1개 연결 · λ₂ = ${lam2.toFixed(2)}`;
-  badge.className = zeros > 1 ? 'bad' : 'ok';
-
+  let e = 0, s = 0, rv = 0;
+  for (const r of robots) { e += errOf(r); s += r.sig; if (r.state === 'RENDEZVOUS') rv++; }
+  const n = robots.length;
   $('sCov').textContent = (100 * st.vis / freeCount).toFixed(1) + '%';
   $('sTime').textContent = time.toFixed(0) + ' s';
   $('sErr').textContent = m(e / n) + ' m';
@@ -1052,6 +805,8 @@ function updateUI() {
   $('sInter').textContent = st.inter;
   $('sIntra').textContent = st.intra;
   $('sRej').textContent = st.rej;
+  $('sCand').textContent = cands.length;
+  $('sComp').textContent = st.comps + ' / ' + st.brokers;
   $('sState').textContent = P.mode === 'sparc' ? (n - rv) + ' / ' + rv : '—';
   const save = st.dense > 0 ? 100 * (1 - st.bytes / st.dense) : 0;
   $('sBytes').textContent = fmtB(st.bytes) + '  vs  ' + fmtB(st.dense);
@@ -1060,22 +815,19 @@ function updateUI() {
     logDirty = false;
     $('log').innerHTML = logs.slice(0, 8).map(l => `<li class="${l.cls}"><time>${l.t.toFixed(1)}s</time>${l.msg}</li>`).join('');
   }
-  drawChart(); drawFCurve(); drawMatrices();
+  drawChart();
 }
 
 // ---------- UI wiring ----------
 const CTL = {
   n: v => v + '대', comm: v => (v / PX).toFixed(1) + ' m', noise: v => v.toFixed(1) + '×', speed: v => (v / PX).toFixed(1) + ' m/s',
-  tau: v => v.toFixed(1) + ' m', budget: v => v + ' 개/s', alias: v => v + '%', sep: v => v.toFixed(1), ali: v => v.toFixed(1), coh: v => v.toFixed(1), sim: v => v + '×',
-  beta: v => v.toFixed(2) + '  (βR = ' + (v * P.comm / PX).toFixed(1) + ' m)', k: v => v.toFixed(1), alpha: v => v.toFixed(0)
+  tau: v => v.toFixed(1) + ' m', budget: v => v + ' 개/s', alias: v => v + '%', sep: v => v.toFixed(1), ali: v => v.toFixed(1), coh: v => v.toFixed(1), sim: v => v + '×'
 };
-function refreshOut(k) { $('o-' + k).textContent = CTL[k](P[k]); }
 for (const k in CTL) {
-  const inp = $('c-' + k);
-  inp.value = P[k]; refreshOut(k);
+  const inp = $('c-' + k), out = $('o-' + k);
+  inp.value = P[k]; out.textContent = CTL[k](P[k]);
   inp.addEventListener('input', () => {
-    P[k] = +inp.value; refreshOut(k);
-    if (k === 'comm') refreshOut('beta');
+    P[k] = +inp.value; out.textContent = CTL[k](P[k]);
     if (k === 'n') reset(false);
     if (k === 'alias') makeDesc();
   });
@@ -1084,21 +836,14 @@ document.querySelectorAll('[data-t]').forEach(el => el.addEventListener('change'
 
 function setMode(md) {
   P.mode = md;
-  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === md));
-  document.querySelectorAll('[data-mode]').forEach(el => el.hidden = !el.dataset.mode.split(' ').includes(md));
+  document.querySelectorAll('.modes button').forEach(b => b.classList.toggle('on', b.dataset.m === md));
+  document.querySelectorAll('[data-mode]').forEach(el => el.hidden = el.dataset.mode !== md);
   $('modeDesc').textContent = MODE_DESC[md];
   $('hint').textContent = (md === 'sparc' ? '' : '클릭: 목표 지점 · ') + 'Space 일시정지 · R 리셋 · M 새 맵 · 1/2/3 모드';
   if (md === 'form') assignSlots();
   if (md === 'sparc') for (const r of robots) { r.tgt = null; r.state = 'EXPLORE'; }
 }
-function setConn(c) {
-  P.conn = c;
-  document.querySelectorAll('#connSeg button').forEach(b => b.classList.toggle('on', b.dataset.c === c));
-  $('connDesc').textContent = CONN_DESC[c];
-  log('연결성 힘: ' + { off: '끄기', all: '전체 적용', sel: '선택적 부여(브리지)' }[c]);
-}
-document.querySelectorAll('#modeSeg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
-document.querySelectorAll('#connSeg button').forEach(b => b.addEventListener('click', () => setConn(b.dataset.c)));
+document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
 
 function togglePause() { running = !running; $('bPause').textContent = running ? '⏸ 일시정지' : '▶ 재생'; }
 $('bPause').addEventListener('click', togglePause);
@@ -1109,21 +854,20 @@ window.addEventListener('keydown', e => {
   if (e.code === 'Space') { e.preventDefault(); togglePause(); }
   else if (e.key === 'r' || e.key === 'R') reset(false);
   else if (e.key === 'm' || e.key === 'M') reset(true);
-  else if (e.key === '1') setMode('boids'); else if (e.key === '2') setMode('sparc'); else if (e.key === '3') setMode('form');
+  else if (e.key === '1') setMode('sparc'); else if (e.key === '2') setMode('boids'); else if (e.key === '3') setMode('form');
 });
 cv.addEventListener('pointerdown', e => {
   const rc = cv.getBoundingClientRect(), x = (e.clientX - rc.left - ox) / scale, y = (e.clientY - rc.top - oy) / scale;
   if (x < 0 || y < 0 || x > W || y > H) return;
   target = { x, y };
   if (P.mode === 'form') assignSlots();
-  if (P.mode === 'sparc') log('목표 지점은 Boids·대형 모드에서 사용됩니다 (1/3 키)');
+  if (P.mode === 'sparc') log('목표 지점은 Boids·대형 모드에서 사용됩니다 (2/3 키)');
 });
 window.addEventListener('resize', resize);
 
 // ---------- main loop ----------
 reset(false);
-setMode(P.mode);
-setConn(P.conn);
+setMode('sparc');
 resize();
 let last = performance.now(), acc = 0, uiAcc = 0;
 function frame(now) {
