@@ -178,4 +178,8 @@ comparison.png
 - M. Fiedler, “Algebraic connectivity of graphs,” *Czechoslovak Mathematical Journal*, 23(2), 298–305, 1973.
 - R. E. Tarjan, “Depth-first search and linear graph algorithms,” *SIAM Journal on Computing*, 1(2), 146–160, 1972.
 
+## License
+
+[MIT](LICENSE) — free to use, modify and share, with attribution.
+
 *This is an independent educational simulation. It is not affiliated with MISTLab or the Swarm-SLAM authors.*
